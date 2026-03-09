@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.log
+*.exe
+*.msi
+.DS_Store
+Thumbs.db
+Previous Projects/
