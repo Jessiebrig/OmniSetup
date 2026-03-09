@@ -16,6 +16,8 @@ Universal setup tool for fresh Windows and Linux installations. One command to r
 - **Install Applications** in one go
 
 ### Applications Installed
+### Applications Installed
+
 
 **Browsers:**
 - Brave Browser
@@ -36,7 +38,6 @@ Universal setup tool for fresh Windows and Linux installations. One command to r
 - Python
 - Visual Studio Code
 - Notepad++ (Windows only)
-
 ## One-Line Installation
 
 Clones the repository and automatically runs the setup script:

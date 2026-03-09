@@ -5,6 +5,7 @@ import platform
 import subprocess
 import logging
 from datetime import datetime
+from apps_config import APPS
 
 # Setup logging
 log_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'omnisetup.log')
@@ -208,37 +209,15 @@ def install_linux_de():
     
     logging.info("DE installation completed")
 
+def get_app_list():
+    """Returns the application list for both platforms"""
+    return APPS
+
 def install_apps():
     print("\n=== Installing Applications ===")
     logging.info("Starting application installation")
     
-    apps = {
-        'windows': {
-            'brave': 'Brave.Brave',
-            'lightshot': 'Skillbrains.Lightshot',
-            'slack': 'SlackTechnologies.Slack',
-            'telegram': 'Telegram.TelegramDesktop',
-            'googledrive': 'Google.GoogleDrive',
-            'zoom': 'Zoom.Zoom',
-            'vlc': 'VideoLAN.VLC',
-            'notepadplusplus': 'Notepad++.Notepad++',
-            'python': 'Python.Python.3.12',
-            'chrome': 'Google.Chrome',
-            'firefox': 'Mozilla.Firefox',
-            'vscode': 'Microsoft.VisualStudioCode'
-        },
-        'linux': {
-            'brave': 'brave-browser',
-            'slack': 'slack',
-            'telegram': 'telegram-desktop',
-            'zoom': 'zoom',
-            'vlc': 'vlc',
-            'python': 'python3',
-            'chrome': 'google-chrome-stable',
-            'firefox': 'firefox',
-            'vscode': 'code'
-        }
-    }
+    apps = get_app_list()
     
     if os.name == 'nt':
         print("\nUsing winget to install applications...")
