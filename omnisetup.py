@@ -86,7 +86,8 @@ def is_admin():
         except:
             return False
     else:
-        return os.geteuid() == 0
+        # On Linux, we use sudo for individual commands, so return True
+        return True
 
 def run_command(cmd, shell=True):
     try:
