@@ -87,6 +87,64 @@ For the cleanest installation experience, it's recommended to install on a fresh
 - Optimal performance
 - No pre-installed bloatware
 
+### Git Not Installed?
+
+On minimal Debian installations, Git is not included by default. After enabling networking, install Git first:
+
+```bash
+sudo apt update
+sudo apt install git -y
+```
+
+### Network Not Working on Fresh Debian CLI Install?
+
+On minimal Debian installations, networking may not start automatically. Before running OmniSetup, you need to enable your network connection:
+
+**For Wired/Ethernet Connection:**
+
+1. Find your network interface name:
+```bash
+ip a
+```
+Look for interface like `enp1s0`, `eth0`, `ens33` (not `lo`)
+
+2. Bring the interface up and configure:
+```bash
+sudo ip link set enp1s0 up
+sudo dhcpcd enp1s0
+```
+(Replace `enp1s0` with your actual interface name)
+
+3. Test connection:
+```bash
+ping -c 3 google.com
+ping -c 3 github.com
+```
+
+**For WiFi Connection:**
+
+1. Find your WiFi interface:
+```bash
+ip a
+```
+Look for interface like `wlan0`, `wlp2s0`
+
+2. Connect to your network:
+```bash
+sudo ip link set wlan0 up
+wpa_passphrase "YourNetworkName" "YourPassword" | sudo tee /etc/wpa_supplicant.conf
+sudo wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant.conf
+sudo dhcpcd wlan0
+```
+(Replace `wlan0` with your actual interface name)
+
+3. Test connection:
+```bash
+ping -c 3 google.com
+```
+
+Once networking is active, you can clone and run OmniSetup!
+
 ## Power Management Explained
 
 OmniSetup automatically detects your hardware (CPU vendor and GPU) and offers relevant power optimization tools:
