@@ -1,5 +1,52 @@
 #!/bin/bash
 
+BASE_URL="https://raw.githubusercontent.com/Jessiebrig/OmniSetup/refs/heads/main"
+
+# Always check and download missing files
+echo "Checking for required files..."
+
+DOWNLOAD_NEEDED=0
+
+if [ ! -f "omnisetup.py" ]; then
+    DOWNLOAD_NEEDED=1
+fi
+
+if [ ! -f "omnisetup_gui.py" ]; then
+    DOWNLOAD_NEEDED=1
+fi
+
+if [ ! -f "apps_config.py" ]; then
+    DOWNLOAD_NEEDED=1
+fi
+
+if [ $DOWNLOAD_NEEDED -eq 1 ]; then
+    echo "Downloading OmniSetup files..."
+    
+    # Try curl first, fallback to wget
+    if command -v curl &> /dev/null; then
+        curl -fsSL -O "$BASE_URL/omnisetup.py" || { echo "Failed to download omnisetup.py"; exit 1; }
+        curl -fsSL -O "$BASE_URL/omnisetup_gui.py" || { echo "Failed to download omnisetup_gui.py"; exit 1; }
+        curl -fsSL -O "$BASE_URL/apps_config.py" || { echo "Failed to download apps_config.py"; exit 1; }
+    elif command -v wget &> /dev/null; then
+        wget -q "$BASE_URL/omnisetup.py" || { echo "Failed to download omnisetup.py"; exit 1; }
+        wget -q "$BASE_URL/omnisetup_gui.py" || { echo "Failed to download omnisetup_gui.py"; exit 1; }
+        wget -q "$BASE_URL/apps_config.py" || { echo "Failed to download apps_config.py"; exit 1; }
+    else
+        echo "Neither curl nor wget found. Please install one of them."
+        exit 1
+    fi
+    
+    echo "Download complete!"
+else
+    echo "All files present."
+fi
+
+# Verify files exist
+if [ ! -f "omnisetup.py" ]; then
+    echo "Error: omnisetup.py not found after download!"
+    exit 1
+fi
+
 # Check if Python 3 is installed
 if ! command -v python3 &> /dev/null; then
     echo "Python 3 is not installed. Installing..."
