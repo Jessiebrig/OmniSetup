@@ -24,13 +24,13 @@ if [ $DOWNLOAD_NEEDED -eq 1 ]; then
     
     # Try curl first, fallback to wget
     if command -v curl &> /dev/null; then
-        curl -fsSL -O "$BASE_URL/omnisetup.py" || { echo "Failed to download omnisetup.py"; exit 1; }
-        curl -fsSL -O "$BASE_URL/omnisetup_gui.py" || { echo "Failed to download omnisetup_gui.py"; exit 1; }
-        curl -fsSL -O "$BASE_URL/apps_config.py" || { echo "Failed to download apps_config.py"; exit 1; }
+        curl -fsSL "$BASE_URL/omnisetup.py" -o omnisetup.py || { echo "Failed to download omnisetup.py"; exit 1; }
+        curl -fsSL "$BASE_URL/omnisetup_gui.py" -o omnisetup_gui.py || { echo "Failed to download omnisetup_gui.py"; exit 1; }
+        curl -fsSL "$BASE_URL/apps_config.py" -o apps_config.py || { echo "Failed to download apps_config.py"; exit 1; }
     elif command -v wget &> /dev/null; then
-        wget -q "$BASE_URL/omnisetup.py" || { echo "Failed to download omnisetup.py"; exit 1; }
-        wget -q "$BASE_URL/omnisetup_gui.py" || { echo "Failed to download omnisetup_gui.py"; exit 1; }
-        wget -q "$BASE_URL/apps_config.py" || { echo "Failed to download apps_config.py"; exit 1; }
+        wget -q "$BASE_URL/omnisetup.py" -O omnisetup.py || { echo "Failed to download omnisetup.py"; exit 1; }
+        wget -q "$BASE_URL/omnisetup_gui.py" -O omnisetup_gui.py || { echo "Failed to download omnisetup_gui.py"; exit 1; }
+        wget -q "$BASE_URL/apps_config.py" -O apps_config.py || { echo "Failed to download apps_config.py"; exit 1; }
     else
         echo "Neither curl nor wget found. Please install one of them."
         exit 1
