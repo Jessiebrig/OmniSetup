@@ -6,6 +6,7 @@ import subprocess
 import logging
 from datetime import datetime
 from apps_config import APPS
+from hardware_detect import get_hardware_info
 
 # Setup logging
 log_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'omnisetup.log')
@@ -130,14 +131,18 @@ def install_windows_debloat():
     
     if choice == "1":
         print("\nRunning Chris Titus Tech Windows Utility...")
+        print("The GUI will open. Close it when done to continue.")
         logging.info("Starting Chris Titus Tech debloat")
-        cmd = 'powershell -Command "irm christitus.com/win | iex"'
-        run_command(cmd)
+        cmd = 'powershell -ExecutionPolicy Bypass -Command "irm christitus.com/win | iex"'
+        subprocess.run(cmd, shell=True)
+        print("Chris Titus Tech completed.")
     elif choice == "2":
         print("\nRunning Windows10Debloater...")
+        print("The GUI will open. Close it when done to continue.")
         logging.info("Starting Windows10Debloater")
-        cmd = 'powershell -Command "iwr -useb https://git.io/debloat|iex"'
-        run_command(cmd)
+        cmd = 'powershell -ExecutionPolicy Bypass -Command "iwr -useb https://git.io/debloat|iex"'
+        subprocess.run(cmd, shell=True)
+        print("Windows10Debloater completed.")
     else:
         print("Invalid option")
         logging.warning(f"Invalid debloat option: {choice}")
@@ -208,6 +213,172 @@ def install_linux_de():
         return
     
     logging.info("DE installation completed")
+
+def install_power_management():
+    print("\n=== Power Management Installation ===")
+    
+    # Detect hardware
+    hw_info = get_hardware_info()
+    cpu_vendor = hw_info['cpu_vendor']
+    has_nvidia = hw_info['has_nvidia']
+    
+    print(f"\nDetected: {cpu_vendor.upper()} CPU" + (" + NVIDIA GPU" if has_nvidia else ""))
+    print("\n--- Basic Options ---")
+    print("1. auto-cpufreq (Automatic, recommended)")
+    print("2. TLP (Advanced features)")
+    
+    option_num = 3
+    cpu_tool_option = None
+    nvidia_tool1_option = None
+    nvidia_tool2_option = None
+    combo1_option = None
+    combo2_option = None
+    
+    # CPU-specific tool
+    print("\n--- CPU-Specific Tools ---")
+    if cpu_vendor == 'intel':
+        print(f"{option_num}. thermald (Intel thermal management)")
+        cpu_tool_option = option_num
+        cpu_tool_name = "thermald"
+        cpu_tool_pkg = "thermald"
+        option_num += 1
+    elif cpu_vendor == 'amd':
+        print(f"{option_num}. ryzenadj (AMD Ryzen tuning)")
+        cpu_tool_option = option_num
+        cpu_tool_name = "ryzenadj"
+        cpu_tool_pkg = "ryzenadj"
+        option_num += 1
+    
+    # NVIDIA tools
+    if has_nvidia:
+        print("\n--- NVIDIA GPU Tools ---")
+        print(f"{option_num}. envycontrol (NVIDIA GPU switching)")
+        nvidia_tool1_option = option_num
+        option_num += 1
+        print(f"{option_num}. optimus-manager (Advanced NVIDIA switching)")
+        nvidia_tool2_option = option_num
+        option_num += 1
+    
+    # Combo options
+    if cpu_tool_option or has_nvidia:
+        print("\n--- Recommended Combinations ---")
+        combo_parts = []
+        if cpu_tool_option:
+            combo_parts.append(cpu_tool_name)
+        if has_nvidia:
+            combo_parts.append("envycontrol")
+        
+        if combo_parts:
+            print(f"{option_num}. auto-cpufreq + {' + '.join(combo_parts)}")
+            combo1_option = option_num
+            option_num += 1
+            
+            combo_parts_adv = []
+            if cpu_tool_option:
+                combo_parts_adv.append(cpu_tool_name)
+            if has_nvidia:
+                combo_parts_adv.append("optimus-manager")
+            
+            print(f"{option_num}. TLP + {' + '.join(combo_parts_adv)}")
+            combo2_option = option_num
+            option_num += 1
+    
+    choice = input("\nSelect option: ").strip()
+    
+    try:
+        distro = platform.freedesktop_os_release().get('ID', '').lower()
+    except:
+        distro = ''
+    
+    if choice == "1":
+        print("\nInstalling auto-cpufreq...")
+        _install_power_tool("auto-cpufreq", distro)
+    elif choice == "2":
+        print("\nInstalling TLP...")
+        _install_power_tool("tlp", distro)
+    elif cpu_tool_option and choice == str(cpu_tool_option):
+        print(f"\nInstalling {cpu_tool_name}...")
+        _install_power_tool(cpu_tool_pkg, distro)
+    elif nvidia_tool1_option and choice == str(nvidia_tool1_option):
+        print("\nInstalling envycontrol...")
+        _install_power_tool("envycontrol", distro)
+    elif nvidia_tool2_option and choice == str(nvidia_tool2_option):
+        print("\nInstalling optimus-manager...")
+        _install_power_tool("optimus-manager", distro)
+    elif combo1_option and choice == str(combo1_option):
+        print("\nInstalling recommended combo...")
+        _install_power_tool("auto-cpufreq", distro)
+        if cpu_tool_option:
+            _install_power_tool(cpu_tool_pkg, distro)
+        if has_nvidia:
+            _install_power_tool("envycontrol", distro)
+    elif combo2_option and choice == str(combo2_option):
+        print("\nInstalling advanced combo...")
+        _install_power_tool("tlp", distro)
+        if cpu_tool_option:
+            _install_power_tool(cpu_tool_pkg, distro)
+        if has_nvidia:
+            _install_power_tool("optimus-manager", distro)
+    else:
+        print("Invalid option")
+        return
+    
+    logging.info("Power management installation completed")
+
+def _install_power_tool(tool, distro):
+    """Helper function to install power management tools"""
+    if 'ubuntu' in distro or 'debian' in distro:
+        if tool == "auto-cpufreq":
+            run_command("sudo apt update && sudo apt install -y auto-cpufreq")
+            run_command("sudo auto-cpufreq --install")
+        elif tool == "tlp":
+            run_command("sudo apt update && sudo apt install -y tlp tlp-rdw")
+            run_command("sudo systemctl enable tlp")
+        elif tool == "thermald":
+            run_command("sudo apt update && sudo apt install -y thermald")
+            run_command("sudo systemctl enable thermald")
+        elif tool == "ryzenadj":
+            print("Note: ryzenadj requires manual installation from GitHub")
+            print("Visit: https://github.com/FlyGoat/RyzenAdj")
+        elif tool == "envycontrol":
+            run_command("sudo apt update && sudo apt install -y python3-pip")
+            run_command("pip3 install envycontrol")
+        elif tool == "optimus-manager":
+            print("Note: optimus-manager is primarily for Arch-based distros")
+            print("Consider using envycontrol instead")
+    elif 'fedora' in distro or 'rhel' in distro:
+        if tool == "auto-cpufreq":
+            run_command("sudo dnf install -y auto-cpufreq")
+            run_command("sudo auto-cpufreq --install")
+        elif tool == "tlp":
+            run_command("sudo dnf install -y tlp tlp-rdw")
+            run_command("sudo systemctl enable tlp")
+        elif tool == "thermald":
+            run_command("sudo dnf install -y thermald")
+            run_command("sudo systemctl enable thermald")
+        elif tool == "ryzenadj":
+            print("Note: ryzenadj requires manual installation from GitHub")
+        elif tool == "envycontrol":
+            run_command("pip3 install envycontrol")
+        elif tool == "optimus-manager":
+            print("Note: optimus-manager is primarily for Arch-based distros")
+    elif 'arch' in distro:
+        if tool == "auto-cpufreq":
+            run_command("sudo pacman -S --noconfirm auto-cpufreq")
+            run_command("sudo systemctl enable --now auto-cpufreq")
+        elif tool == "tlp":
+            run_command("sudo pacman -S --noconfirm tlp")
+            run_command("sudo systemctl enable tlp")
+        elif tool == "thermald":
+            run_command("sudo pacman -S --noconfirm thermald")
+            run_command("sudo systemctl enable thermald")
+        elif tool == "ryzenadj":
+            run_command("yay -S --noconfirm ryzenadj-git")
+        elif tool == "envycontrol":
+            run_command("yay -S --noconfirm envycontrol")
+        elif tool == "optimus-manager":
+            run_command("yay -S --noconfirm optimus-manager")
+            run_command("sudo systemctl enable optimus-manager")
 
 def get_app_list():
     """Returns the application list for both platforms"""
@@ -285,16 +456,19 @@ def main_menu():
     
     elif system == "Linux":
         print("\n1. Install Desktop Environment (KDE/XFCE)")
-        print("2. Install Applications")
-        print("3. Quit")
+        print("2. Install Power Management")
+        print("3. Install Applications")
+        print("4. Quit")
         
-        choice = input("\nSelect option (1-3): ").strip()
+        choice = input("\nSelect option (1-4): ").strip()
         
         if choice == "1":
             install_linux_de()
         elif choice == "2":
-            install_apps()
+            install_power_management()
         elif choice == "3":
+            install_apps()
+        elif choice == "4":
             logging.info("User quit")
             sys.exit(0)
         else:
