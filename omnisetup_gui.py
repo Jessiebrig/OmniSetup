@@ -16,9 +16,9 @@ from omnisetup import (
     install_power_management,
     run_command,
     get_app_list,
+    get_hardware_info,
     logging
 )
-from hardware_detect import get_hardware_info
 
 def check_git_installed():
     """Check if Git is installed"""
