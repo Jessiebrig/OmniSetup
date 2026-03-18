@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 REPO_OWNER="Jessiebrig"
 REPO_NAME="OmniSetup"
 SCRIPT_NAME="setup.sh"
@@ -72,6 +74,9 @@ echo ""
 # Download setup.sh from selected branch
 SCRIPT_URL="https://raw.githubusercontent.com/$REPO_OWNER/$REPO_NAME/$SELECTED_BRANCH/$SCRIPT_NAME"
 
+echo "Downloading files from $SELECTED_BRANCH:"
+echo ""
+
 echo -n "Downloading setup.sh... "
 if curl -sL "$SCRIPT_URL" -o "$SCRIPT_NAME" 2>/dev/null; then
     echo "✓"
@@ -82,10 +87,12 @@ else
 fi
 
 if [[ ! -f "$SCRIPT_NAME" ]] || [[ ! -s "$SCRIPT_NAME" ]]; then
-    echo "Error: setup.sh is empty or missing"
+    echo "✗ Error: setup.sh is empty or missing"
     exit 1
 fi
 
-exec < /dev/tty
+echo ""
+
 export INSTALLER_BRANCH="$SELECTED_BRANCH"
+exec < /dev/tty
 bash "$SCRIPT_NAME"
