@@ -65,59 +65,45 @@ class OmniSetupGUI:
         self.setup_ui()
     
     def setup_ui(self):
+        # Buttons pinned at bottom first so they're always visible
+        button_frame = ttk.Frame(self.root, padding="10")
+        button_frame.pack(side=tk.BOTTOM, fill=tk.X)
+
+        ttk.Button(button_frame, text="Install Selected", command=self.install_selected).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="Select All Apps", command=self.select_all_apps).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="Deselect All Apps", command=self.deselect_all_apps).pack(side=tk.LEFT, padx=5)
+
         # Header
-        header = tk.Label(
-            self.root, 
-            text=f"OmniSetup - {self.system}", 
-            font=("Arial", 16, "bold"),
-            pady=10
-        )
-        header.pack()
-        
-        # Main container
-        main_frame = ttk.Frame(self.root, padding="10")
-        main_frame.pack(fill=tk.BOTH, expand=True)
-        
+        tk.Label(self.root, text=f"OmniSetup - {self.system}", font=("Arial", 16, "bold"), pady=10).pack()
+
+        # Scrollable main area
+        container = ttk.Frame(self.root)
+        container.pack(fill=tk.BOTH, expand=True)
+
+        canvas = tk.Canvas(container)
+        scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
+        main_frame = ttk.Frame(canvas, padding="10")
+
+        main_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=main_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
         # Platform-specific options
         if self.system == "Windows":
             self.setup_windows_options(main_frame)
         elif self.system == "Linux":
             self.setup_linux_options(main_frame)
-        
+
         # Applications section
         self.setup_apps_section(main_frame)
-        
+
         # Log output
-        log_label = tk.Label(main_frame, text="Output Log:", font=("Arial", 10, "bold"))
-        log_label.pack(anchor=tk.W, pady=(10, 5))
-        
+        tk.Label(main_frame, text="Output Log:", font=("Arial", 10, "bold")).pack(anchor=tk.W, pady=(10, 5))
         self.log_text = scrolledtext.ScrolledText(main_frame, height=8, state='disabled')
         self.log_text.pack(fill=tk.BOTH, expand=True)
-        
-        # Buttons
-        button_frame = ttk.Frame(self.root, padding="10")
-        button_frame.pack(fill=tk.X)
-        
-        install_btn = ttk.Button(
-            button_frame, 
-            text="Install Selected", 
-            command=self.install_selected
-        )
-        install_btn.pack(side=tk.LEFT, padx=5)
-        
-        select_all_btn = ttk.Button(
-            button_frame, 
-            text="Select All Apps", 
-            command=self.select_all_apps
-        )
-        select_all_btn.pack(side=tk.LEFT, padx=5)
-        
-        deselect_all_btn = ttk.Button(
-            button_frame, 
-            text="Deselect All Apps", 
-            command=self.deselect_all_apps
-        )
-        deselect_all_btn.pack(side=tk.LEFT, padx=5)
     
     def setup_windows_options(self, parent):
         options_frame = ttk.LabelFrame(parent, text="Windows Options", padding="10")
@@ -265,37 +251,20 @@ class OmniSetupGUI:
     
     def setup_apps_section(self, parent):
         apps_frame = ttk.LabelFrame(parent, text="Applications", padding="10")
-        apps_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+        apps_frame.pack(fill=tk.X, pady=(0, 10))
 
-        canvas = tk.Canvas(apps_frame, height=200)
-        scrollbar = ttk.Scrollbar(apps_frame, orient="vertical", command=canvas.yview)
-        scrollable_frame = ttk.Frame(canvas)
-
-        scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-        )
-
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-
-        # Cross-platform apps
-        ttk.Label(scrollable_frame, text="Cross-Platform", font=("Arial", 9, "bold")).pack(anchor=tk.W, pady=(0, 2))
+        ttk.Label(apps_frame, text="Cross-Platform", font=("Arial", 9, "bold")).pack(anchor=tk.W, pady=(0, 2))
         for app_name in self.apps['cross_platform'].keys():
             var = tk.BooleanVar()
-            ttk.Checkbutton(scrollable_frame, text=app_name, variable=var).pack(anchor=tk.W, pady=2)
+            ttk.Checkbutton(apps_frame, text=app_name, variable=var).pack(anchor=tk.W, pady=2)
             self.checkboxes[app_name] = var
 
-        # Windows-only apps
         if self.system == "Windows":
-            ttk.Label(scrollable_frame, text="\nWindows Only", font=("Arial", 9, "bold")).pack(anchor=tk.W, pady=(5, 2))
+            ttk.Label(apps_frame, text="Windows Only", font=("Arial", 9, "bold")).pack(anchor=tk.W, pady=(10, 2))
             for app_name in self.apps['windows_only'].keys():
                 var = tk.BooleanVar()
-                ttk.Checkbutton(scrollable_frame, text=app_name, variable=var).pack(anchor=tk.W, pady=2)
+                ttk.Checkbutton(apps_frame, text=app_name, variable=var).pack(anchor=tk.W, pady=2)
                 self.checkboxes[app_name] = var
-
-        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
     
     def select_all_apps(self):
         for var in self.checkboxes.values():
