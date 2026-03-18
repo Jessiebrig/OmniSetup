@@ -50,13 +50,13 @@ Clones the repository and automatically runs the setup script:
 ### Windows (CMD or PowerShell as Administrator)
 
 ```cmd
-git clone https://github.com/Jessiebrig/OmniSetup.git && cd OmniSetup && setup.cmd
+curl -fsSL https://raw.githubusercontent.com/Jessiebrig/OmniSetup/refs/heads/main/init.cmd | cmd
 ```
 
 ### Linux (Terminal as Root/Sudo)
 
 ```bash
-git clone https://github.com/Jessiebrig/OmniSetup.git && cd OmniSetup && chmod +x setup.sh && ./setup.sh
+curl -fsSL https://raw.githubusercontent.com/Jessiebrig/OmniSetup/refs/heads/main/init.sh | bash
 ```
 
 ## Quick Start
@@ -108,17 +108,24 @@ ip a
 ```
 Look for interface like `enp1s0`, `eth0`, `ens33` (not `lo`)
 
-2. Bring the interface up and configure:
+2. Configure it to persist after reboot by editing `/etc/network/interfaces`:
 ```bash
-sudo ip link set enp1s0 up
-sudo dhcpcd enp1s0
+sudo nano /etc/network/interfaces
 ```
-(Replace `enp1s0` with your actual interface name)
+Add these lines (replace `enp1s0` with your actual interface name):
+```
+auto enp1s0
+iface enp1s0 inet dhcp
+```
 
-3. Test connection:
+3. Bring the interface up:
+```bash
+sudo ifup enp1s0
+```
+
+4. Test connection:
 ```bash
 ping -c 3 google.com
-ping -c 3 github.com
 ```
 
 **For WiFi Connection:**
