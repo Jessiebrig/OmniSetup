@@ -87,14 +87,6 @@ if [[ ! -f "$SCRIPT_NAME" ]] || [[ ! -s "$SCRIPT_NAME" ]]; then
     exit 1
 fi
 
-echo ""
-echo -n "Run setup? (y/N): " > /dev/tty
-read -r response < /dev/tty
-
-if [[ "$response" =~ ^[Yy]$ ]]; then
-    exec < /dev/tty
-    export INSTALLER_BRANCH="$SELECTED_BRANCH"
-    bash "$SCRIPT_NAME"
-else
-    echo "Setup cancelled."
-fi
+exec < /dev/tty
+export INSTALLER_BRANCH="$SELECTED_BRANCH"
+bash "$SCRIPT_NAME"
