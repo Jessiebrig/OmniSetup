@@ -16,8 +16,8 @@ echo "Fetching available branches..."
 BRANCHES=$(curl -sL "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/branches" | grep '"name":' | cut -d'"' -f4)
 
 if [[ -z "$BRANCHES" ]]; then
-    echo "Error: Failed to fetch branches. Check your internet connection."
-    exit 1
+    echo "Warning: Could not fetch branches (rate limit or network issue). Defaulting to main."
+    BRANCHES="main"
 fi
 
 # Display branches with last commit info
