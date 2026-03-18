@@ -69,5 +69,4 @@ echo -n "Downloading setup.sh... "
 curl -fsSL "https://raw.githubusercontent.com/$REPO_OWNER/$REPO_NAME/refs/heads/$SELECTED_BRANCH/setup.sh" -o setup.sh && echo "✓" || { echo "✗"; exit 1; }
 
 export INSTALLER_BRANCH="$SELECTED_BRANCH"
-exec < /dev/tty
 bash setup.sh
