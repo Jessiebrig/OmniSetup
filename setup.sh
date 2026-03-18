@@ -1,7 +1,5 @@
 #!/bin/bash
 
-exec < /dev/tty
-
 BRANCH="${INSTALLER_BRANCH:-main}"
 BASE_URL="https://raw.githubusercontent.com/Jessiebrig/OmniSetup/$BRANCH"
 

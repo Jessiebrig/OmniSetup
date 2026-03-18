@@ -16,8 +16,8 @@ echo "Fetching available branches..."
 BRANCHES=$(curl -sL "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/branches" | grep '"name":' | cut -d'"' -f4)
 
 if [[ -z "$BRANCHES" ]]; then
-    echo "Warning: Could not fetch branches (rate limit or network issue). Defaulting to main."
-    BRANCHES="main"
+    echo "Error: Failed to fetch branches. Check your internet connection."
+    exit 1
 fi
 
 # Display branches with last commit info
@@ -71,26 +71,30 @@ echo ""
 
 # Download setup.sh from selected branch
 SCRIPT_URL="https://raw.githubusercontent.com/$REPO_OWNER/$REPO_NAME/$SELECTED_BRANCH/$SCRIPT_NAME"
-TMP_SCRIPT=$(mktemp /tmp/omnisetup_XXXXXX.sh)
 
 echo -n "Downloading setup.sh... "
-if curl -fsSL "$SCRIPT_URL" -o "$TMP_SCRIPT" 2>/dev/null; then
+if curl -sL "$SCRIPT_URL" -o "$SCRIPT_NAME" 2>/dev/null; then
     echo "✓"
 else
     echo "✗"
     echo "Error: Failed to download setup.sh"
-    rm -f "$TMP_SCRIPT"
     exit 1
 fi
 
-if [[ ! -s "$TMP_SCRIPT" ]]; then
+# Verify file exists and has content
+if [[ ! -f "$SCRIPT_NAME" ]] || [[ ! -s "$SCRIPT_NAME" ]]; then
     echo "Error: setup.sh is empty or missing"
-    rm -f "$TMP_SCRIPT"
     exit 1
 fi
 
-chmod +x "$TMP_SCRIPT"
-exec < /dev/tty
-export INSTALLER_BRANCH="$SELECTED_BRANCH"
-bash "$TMP_SCRIPT"
-rm -f "$TMP_SCRIPT"
+echo ""
+echo -n "Run setup? (y/N): " > /dev/tty
+read -r response < /dev/tty
+
+if [[ "$response" =~ ^[Yy]$ ]]; then
+    exec < /dev/tty
+    export INSTALLER_BRANCH="$SELECTED_BRANCH"
+    bash "$SCRIPT_NAME"
+else
+    echo "Setup cancelled."
+fi
