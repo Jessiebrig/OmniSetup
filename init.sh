@@ -70,11 +70,10 @@ echo "Selected: $SELECTED_BRANCH"
 echo ""
 
 # Download setup.sh from selected branch
-mkdir -p omnisetup
 SCRIPT_URL="https://raw.githubusercontent.com/$REPO_OWNER/$REPO_NAME/$SELECTED_BRANCH/$SCRIPT_NAME"
 
 echo -n "Downloading setup.sh... "
-if curl -sL "$SCRIPT_URL" -o "omnisetup/$SCRIPT_NAME" 2>/dev/null; then
+if curl -sL "$SCRIPT_URL" -o "$SCRIPT_NAME" 2>/dev/null; then
     echo "✓"
 else
     echo "✗"
@@ -83,7 +82,7 @@ else
 fi
 
 # Verify file exists and has content
-if [[ ! -f "omnisetup/$SCRIPT_NAME" ]] || [[ ! -s "omnisetup/$SCRIPT_NAME" ]]; then
+if [[ ! -f "$SCRIPT_NAME" ]] || [[ ! -s "$SCRIPT_NAME" ]]; then
     echo "Error: setup.sh is empty or missing"
     exit 1
 fi
@@ -95,7 +94,7 @@ read -r response < /dev/tty
 if [[ "$response" =~ ^[Yy]$ ]]; then
     exec < /dev/tty
     export INSTALLER_BRANCH="$SELECTED_BRANCH"
-    cd omnisetup && bash "$SCRIPT_NAME"
+    bash "$SCRIPT_NAME"
 else
     echo "Setup cancelled."
 fi

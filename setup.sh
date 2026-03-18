@@ -1,28 +1,22 @@
 #!/bin/bash
 
-BASE_URL="https://raw.githubusercontent.com/Jessiebrig/OmniSetup/refs/heads/main"
+BRANCH="${INSTALLER_BRANCH:-main}"
+BASE_URL="https://raw.githubusercontent.com/Jessiebrig/OmniSetup/$BRANCH"
+
+mkdir -p omnisetup && cd omnisetup
 
 # Always check and download missing files
 echo "Checking for required files..."
 
 DOWNLOAD_NEEDED=0
 
-if [ ! -f "omnisetup.py" ]; then
-    DOWNLOAD_NEEDED=1
-fi
-
-if [ ! -f "omnisetup_gui.py" ]; then
-    DOWNLOAD_NEEDED=1
-fi
-
-if [ ! -f "apps_config.py" ]; then
-    DOWNLOAD_NEEDED=1
-fi
+[ ! -f "omnisetup.py" ] && DOWNLOAD_NEEDED=1
+[ ! -f "omnisetup_gui.py" ] && DOWNLOAD_NEEDED=1
+[ ! -f "apps_config.py" ] && DOWNLOAD_NEEDED=1
 
 if [ $DOWNLOAD_NEEDED -eq 1 ]; then
-    echo "Downloading OmniSetup files..."
-    
-    # Try curl first, fallback to wget
+    echo "Downloading OmniSetup files from branch: $BRANCH"
+
     if command -v curl &> /dev/null; then
         curl -fsSL "$BASE_URL/omnisetup.py" -o omnisetup.py || { echo "Failed to download omnisetup.py"; exit 1; }
         curl -fsSL "$BASE_URL/omnisetup_gui.py" -o omnisetup_gui.py || { echo "Failed to download omnisetup_gui.py"; exit 1; }
@@ -35,7 +29,7 @@ if [ $DOWNLOAD_NEEDED -eq 1 ]; then
         echo "Neither curl nor wget found. Please install one of them."
         exit 1
     fi
-    
+
     echo "Download complete!"
 else
     echo "All files present."
@@ -64,7 +58,6 @@ fi
 
 # Check if display is available (GUI possible)
 if [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
-    # Display available, try GUI
     if ! python3 -c "import tkinter" &> /dev/null; then
         echo "Python tkinter is not installed. Installing..."
         if command -v apt &> /dev/null; then
@@ -78,7 +71,6 @@ if [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
     echo "Starting GUI..."
     python3 omnisetup_gui.py
 else
-    # No display, use CLI
     echo "No display detected. Using CLI mode..."
     python3 omnisetup.py < /dev/tty
 fi
