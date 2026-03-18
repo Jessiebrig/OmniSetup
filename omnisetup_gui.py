@@ -81,7 +81,9 @@ class OmniSetupGUI:
         ttk.Button(button_frame, text="Deselect All Apps", command=self.deselect_all_apps).pack(side=tk.LEFT, padx=5)
 
         self.dark_mode = tk.BooleanVar(value=False)
-        ttk.Checkbutton(button_frame, text="Dark Mode", variable=self.dark_mode, command=self.toggle_theme).pack(side=tk.RIGHT, padx=5)
+        self.theme_btn = tk.Button(button_frame, text="☀ Light Mode", command=self.toggle_theme,
+            bg="#4a9eff", fg="white", relief=tk.FLAT, padx=8, cursor="hand2")
+        self.theme_btn.pack(side=tk.RIGHT, padx=5)
 
         # Header
         tk.Label(self.root, text=f"OmniSetup - {self.system}", font=("Arial", 16, "bold"), pady=10).pack()
@@ -256,22 +258,29 @@ class OmniSetupGUI:
         apps_frame = ttk.LabelFrame(parent, text="Applications", padding="10")
         apps_frame.pack(fill=tk.X, pady=(0, 10))
 
-        ttk.Label(apps_frame, text="Cross-Platform", font=("Arial", 9, "bold")).pack(anchor=tk.W, pady=(0, 2))
-        for app_name in self.apps['cross_platform'].keys():
+        ttk.Label(apps_frame, text="Cross-Platform", font=("Arial", 9, "bold")).grid(row=0, column=0, columnspan=3, sticky=tk.W, pady=(0, 2))
+        for col in range(3):
+            apps_frame.columnconfigure(col, weight=1)
+
+        for i, app_name in enumerate(self.apps['cross_platform'].keys()):
             var = tk.BooleanVar()
-            ttk.Checkbutton(apps_frame, text=app_name, variable=var).pack(anchor=tk.W, pady=2)
+            ttk.Checkbutton(apps_frame, text=app_name, variable=var).grid(row=i//3+1, column=i%3, sticky=tk.W, pady=2)
             self.checkboxes[app_name] = var
 
         if self.system == "Windows":
-            ttk.Label(apps_frame, text="Windows Only", font=("Arial", 9, "bold")).pack(anchor=tk.W, pady=(10, 2))
-            for app_name in self.apps['windows_only'].keys():
+            offset = len(self.apps['cross_platform'])
+            row_offset = offset//3 + 2
+            ttk.Label(apps_frame, text="Windows Only", font=("Arial", 9, "bold")).grid(row=row_offset, column=0, columnspan=3, sticky=tk.W, pady=(10, 2))
+            for i, app_name in enumerate(self.apps['windows_only'].keys()):
                 var = tk.BooleanVar()
-                ttk.Checkbutton(apps_frame, text=app_name, variable=var).pack(anchor=tk.W, pady=2)
+                ttk.Checkbutton(apps_frame, text=app_name, variable=var).grid(row=row_offset+1+i//3, column=i%3, sticky=tk.W, pady=2)
                 self.checkboxes[app_name] = var
     
     def toggle_theme(self):
+        self.dark_mode.set(not self.dark_mode.get())
         style = ttk.Style()
         if self.dark_mode.get():
+            self.theme_btn.config(text="🌙 Dark Mode")
             self.root.configure(bg=BG_COLOR)
             style.theme_use('clam')
             style.configure('.', background=BG_COLOR, foreground=FG_COLOR, fieldbackground=FRAME_BG)
@@ -284,6 +293,7 @@ class OmniSetupGUI:
             style.configure('TButton', background=ACCENT_COLOR, foreground='#ffffff')
             style.map('TButton', background=[('active', '#357abd')])
         else:
+            self.theme_btn.config(text="☀ Light Mode")
             style.theme_use('default')
 
     def select_all_apps(self):
