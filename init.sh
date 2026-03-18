@@ -81,7 +81,6 @@ else
     exit 1
 fi
 
-# Verify file exists and has content
 if [[ ! -f "$SCRIPT_NAME" ]] || [[ ! -s "$SCRIPT_NAME" ]]; then
     echo "Error: setup.sh is empty or missing"
     exit 1
