@@ -6,6 +6,13 @@ import threading
 import sys
 import os
 import subprocess
+import shutil
+
+# Theme colors
+BG_COLOR = "#1a1a2e"
+FG_COLOR = "#e0e0e0"
+ACCENT_COLOR = "#4a9eff"
+FRAME_BG = "#16213e"
 
 # Import from main script
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -73,6 +80,9 @@ class OmniSetupGUI:
         ttk.Button(button_frame, text="Select All Apps", command=self.select_all_apps).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Deselect All Apps", command=self.deselect_all_apps).pack(side=tk.LEFT, padx=5)
 
+        self.dark_mode = tk.BooleanVar(value=False)
+        ttk.Checkbutton(button_frame, text="Dark Mode", variable=self.dark_mode, command=self.toggle_theme).pack(side=tk.RIGHT, padx=5)
+
         # Header
         tk.Label(self.root, text=f"OmniSetup - {self.system}", font=("Arial", 16, "bold"), pady=10).pack()
 
@@ -80,7 +90,7 @@ class OmniSetupGUI:
         container = ttk.Frame(self.root)
         container.pack(fill=tk.BOTH, expand=True)
 
-        canvas = tk.Canvas(container)
+        canvas = tk.Canvas(container, highlightthickness=0)
         scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
         main_frame = ttk.Frame(canvas, padding="10")
 
@@ -102,7 +112,7 @@ class OmniSetupGUI:
 
         # Log output
         tk.Label(main_frame, text="Output Log:", font=("Arial", 10, "bold")).pack(anchor=tk.W, pady=(10, 5))
-        self.log_text = scrolledtext.ScrolledText(main_frame, height=8, state='disabled')
+        self.log_text = scrolledtext.ScrolledText(main_frame, height=8, state='disabled', bg="#000000", fg="#00ff00", insertbackground="#00ff00", font=("Courier", 9))
         self.log_text.pack(fill=tk.BOTH, expand=True)
     
     def setup_windows_options(self, parent):
@@ -148,13 +158,6 @@ class OmniSetupGUI:
         de_frame.pack(fill=tk.X, pady=(0, 10))
         
         self.linux_de = tk.StringVar(value="none")
-        
-        ttk.Radiobutton(
-            de_frame, 
-            text="No Desktop Environment", 
-            variable=self.linux_de, 
-            value="none"
-        ).pack(anchor=tk.W)
         
         ttk.Radiobutton(
             de_frame, 
@@ -266,6 +269,23 @@ class OmniSetupGUI:
                 ttk.Checkbutton(apps_frame, text=app_name, variable=var).pack(anchor=tk.W, pady=2)
                 self.checkboxes[app_name] = var
     
+    def toggle_theme(self):
+        style = ttk.Style()
+        if self.dark_mode.get():
+            self.root.configure(bg=BG_COLOR)
+            style.theme_use('clam')
+            style.configure('.', background=BG_COLOR, foreground=FG_COLOR, fieldbackground=FRAME_BG)
+            style.configure('TFrame', background=BG_COLOR)
+            style.configure('TLabelframe', background=BG_COLOR, foreground=ACCENT_COLOR)
+            style.configure('TLabelframe.Label', background=BG_COLOR, foreground=ACCENT_COLOR)
+            style.configure('TLabel', background=BG_COLOR, foreground=FG_COLOR)
+            style.configure('TCheckbutton', background=BG_COLOR, foreground=FG_COLOR)
+            style.configure('TRadiobutton', background=BG_COLOR, foreground=FG_COLOR)
+            style.configure('TButton', background=ACCENT_COLOR, foreground='#ffffff')
+            style.map('TButton', background=[('active', '#357abd')])
+        else:
+            style.theme_use('default')
+
     def select_all_apps(self):
         for var in self.checkboxes.values():
             var.set(True)
@@ -281,7 +301,12 @@ class OmniSetupGUI:
         self.log_text.config(state='disabled')
     
     def install_selected(self):
-        # Run in thread to prevent GUI freeze
+        if self.system == "Linux":
+            self.log("Requesting sudo privileges...")
+            result = subprocess.run("sudo -v", shell=True)
+            if result.returncode != 0:
+                messagebox.showerror("Error", "sudo authentication failed. Please run as a user with sudo privileges.")
+                return
         thread = threading.Thread(target=self._install_thread)
         thread.daemon = True
         thread.start()
@@ -364,6 +389,49 @@ class OmniSetupGUI:
             elif choice == "2":
                 run_command("sudo pacman -S --noconfirm xfce4")
     
+    def _create_desktop_shortcut(self, app_name):
+        """Create a desktop shortcut for the installed app"""
+        shortcuts = {
+            'Brave Browser':      ('brave-browser',       'brave-browser',         'brave-browser'),
+            'Google Chrome':      ('google-chrome',        'google-chrome-stable',  'google-chrome'),
+            'Mozilla Firefox':    ('firefox',              'firefox',               'firefox'),
+            'Slack':              ('slack',                'slack',                 'slack'),
+            'Telegram':           ('telegram-desktop',     'telegram-desktop',      'telegram-desktop'),
+            'Zoom':               ('zoom',                 'zoom',                  'zoom'),
+            'VLC Media Player':   ('vlc',                  'vlc',                   'vlc'),
+            'Visual Studio Code': ('code',                 'code',                  'code'),
+            'Python':             ('python3',              'python3',               'python3'),
+        }
+
+        if self.system == "Windows":
+            # winget creates shortcuts automatically, nothing to do
+            return
+
+        if app_name not in shortcuts:
+            return
+
+        exec_cmd, icon, wm_class = shortcuts[app_name]
+        desktop = os.path.expanduser("~/Desktop")
+        if not os.path.isdir(desktop):
+            return
+
+        shortcut_path = os.path.join(desktop, f"{app_name}.desktop")
+        content = f"""[Desktop Entry]
+Name={app_name}
+Exec={exec_cmd}
+Icon={icon}
+Type=Application
+Categories=Application;
+StartupWMClass={wm_class}
+"""
+        try:
+            with open(shortcut_path, 'w') as f:
+                f.write(content)
+            os.chmod(shortcut_path, 0o755)
+            self.log(f"  ✓ Desktop shortcut created for {app_name}")
+        except Exception as e:
+            self.log(f"  ✗ Could not create shortcut for {app_name}: {e}")
+
     def _install_apps(self, selected_apps):
         try:
             distro = platform.freedesktop_os_release().get('ID', '').lower()
@@ -378,6 +446,7 @@ class OmniSetupGUI:
                 if pkg:
                     self.log(f"Installing {name}...")
                     run_command(f'winget install --id {pkg} --silent --accept-package-agreements --accept-source-agreements')
+                    self._create_desktop_shortcut(name)
         else:
             if 'ubuntu' in distro or 'debian' in distro:
                 run_command("sudo apt update")
@@ -386,6 +455,7 @@ class OmniSetupGUI:
                 if app_config:
                     self.log(f"Installing {name}...")
                     install_linux_app(name, app_config, distro)
+                    self._create_desktop_shortcut(name)
     
     def _install_power_tool(self, tool):
         """Install power management tool"""

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-BASE_URL="https://raw.githubusercontent.com/Jessiebrig/OmniSetup/refs/heads/main"
+BRANCH="${INSTALLER_BRANCH:-main}"
+BASE_URL="https://raw.githubusercontent.com/Jessiebrig/OmniSetup/refs/heads/$BRANCH"
 
 # Always check and download missing files
 echo "Checking for required files..."
