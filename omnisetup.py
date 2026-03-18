@@ -92,14 +92,10 @@ def is_admin():
 def run_command(cmd, shell=True):
     try:
         logging.info(f"Running: {cmd}")
-        result = subprocess.run(cmd, shell=shell, check=True, capture_output=True, text=True)
-        if result.stdout:
-            logging.info(result.stdout)
+        result = subprocess.run(cmd, shell=shell, check=True, text=True)
         return True
     except subprocess.CalledProcessError as e:
         logging.error(f"Command failed: {e}")
-        if e.stderr:
-            logging.error(e.stderr)
         return False
 
 def check_python_windows():
@@ -237,30 +233,36 @@ def install_linux_de():
     if 'ubuntu' in distro or 'debian' in distro:
         if choice == "1":
             print("\nInstalling KDE Plasma...")
-            run_command("sudo apt update && sudo apt install -y kde-plasma-desktop")
+            run_command("sudo apt update && sudo apt install -y kde-plasma-desktop sddm")
+            run_command("sudo systemctl enable sddm")
         elif choice == "2":
             print("\nInstalling XFCE...")
-            run_command("sudo apt update && sudo apt install -y xfce4")
+            run_command("sudo apt update && sudo apt install -y xfce4 xfce4-goodies lightdm")
+            run_command("sudo systemctl enable lightdm")
         else:
             print("Invalid option")
             return
     elif 'fedora' in distro or 'rhel' in distro:
         if choice == "1":
             print("\nInstalling KDE Plasma...")
-            run_command("sudo dnf install -y @kde-desktop-environment")
+            run_command("sudo dnf install -y @kde-desktop-environment sddm")
+            run_command("sudo systemctl enable sddm")
         elif choice == "2":
             print("\nInstalling XFCE...")
-            run_command("sudo dnf install -y @xfce-desktop-environment")
+            run_command("sudo dnf install -y @xfce-desktop-environment lightdm")
+            run_command("sudo systemctl enable lightdm")
         else:
             print("Invalid option")
             return
     elif 'arch' in distro:
         if choice == "1":
             print("\nInstalling KDE Plasma...")
-            run_command("sudo pacman -S --noconfirm plasma-meta")
+            run_command("sudo pacman -S --noconfirm plasma-meta sddm")
+            run_command("sudo systemctl enable sddm")
         elif choice == "2":
             print("\nInstalling XFCE...")
-            run_command("sudo pacman -S --noconfirm xfce4")
+            run_command("sudo pacman -S --noconfirm xfce4 xfce4-goodies lightdm lightdm-gtk-greeter")
+            run_command("sudo systemctl enable lightdm")
         else:
             print("Invalid option")
             return
