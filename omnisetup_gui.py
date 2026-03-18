@@ -55,7 +55,7 @@ class OmniSetupGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("OmniSetup - Universal Setup Tool")
-        self.root.geometry("700x650")
+        self.root.minsize(400, 500)
         
         self.system = platform.system()
         
@@ -80,16 +80,16 @@ class OmniSetupGUI:
         ttk.Button(button_frame, text="Select All Apps", command=self.select_all_apps).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Deselect All Apps", command=self.deselect_all_apps).pack(side=tk.LEFT, padx=5)
 
-        # Header row with title + toggle button
+        # Header row with title centered + toggle button at right
         header_frame = tk.Frame(self.root)
         header_frame.pack(fill=tk.X, padx=10, pady=10)
-
-        tk.Label(header_frame, text=f"OmniSetup - {self.system}", font=("Arial", 16, "bold")).pack(side=tk.LEFT)
 
         self.dark_mode = tk.BooleanVar(value=False)
         self.theme_btn = tk.Button(header_frame, text="☀ Light Mode", command=self.toggle_theme,
             bg="#4a9eff", fg="white", relief=tk.FLAT, padx=8, cursor="hand2")
-        self.theme_btn.pack(side=tk.LEFT, padx=10)
+        self.theme_btn.pack(side=tk.RIGHT)
+
+        tk.Label(header_frame, text=f"OmniSetup - {self.system}", font=("Arial", 16, "bold")).pack(expand=True)
 
         # Scrollable main area
         container = ttk.Frame(self.root)
@@ -102,6 +102,7 @@ class OmniSetupGUI:
         main_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
         canvas.create_window((0, 0), window=main_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.bind("<Configure>", lambda e: canvas.itemconfig(canvas.find_all()[0], width=e.width))
 
         canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
