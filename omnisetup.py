@@ -496,7 +496,10 @@ def main_menu():
         print("3. Install Applications")
         print("4. Quit")
         
-        choice = input("\nSelect option (1-4): ").strip()
+        try:
+            choice = input("\nSelect option (1-4): ").strip()
+        except EOFError:
+            sys.exit(0)
         
         if choice == "1":
             install_windows_debloat()
@@ -517,7 +520,10 @@ def main_menu():
         print("3. Install Applications")
         print("4. Quit")
         
-        choice = input("\nSelect option (1-4): ").strip()
+        try:
+            choice = input("\nSelect option (1-4): ").strip()
+        except EOFError:
+            sys.exit(0)
         
         if choice == "1":
             install_linux_de()
@@ -532,7 +538,10 @@ def main_menu():
             print("Invalid option")
             logging.warning(f"Invalid menu option: {choice}")
     
-    input("\nPress Enter to continue...")
+    try:
+        input("\nPress Enter to continue...")
+    except EOFError:
+        pass
     main_menu()
 
 if __name__ == "__main__":
