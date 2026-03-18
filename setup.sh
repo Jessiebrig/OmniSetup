@@ -80,5 +80,5 @@ if [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
 else
     # No display, use CLI
     echo "No display detected. Using CLI mode..."
-    python3 omnisetup.py
+    python3 omnisetup.py < /dev/tty
 fi
