@@ -15,6 +15,7 @@ from omnisetup import (
     install_linux_de,
     install_power_management,
     run_command,
+    install_linux_app,
     get_app_list,
     get_hardware_info,
     logging
@@ -265,30 +266,34 @@ class OmniSetupGUI:
     def setup_apps_section(self, parent):
         apps_frame = ttk.LabelFrame(parent, text="Applications", padding="10")
         apps_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
-        
-        # Scrollable canvas for checkboxes
+
         canvas = tk.Canvas(apps_frame, height=200)
         scrollbar = ttk.Scrollbar(apps_frame, orient="vertical", command=canvas.yview)
         scrollable_frame = ttk.Frame(canvas)
-        
+
         scrollable_frame.bind(
             "<Configure>",
             lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
         )
-        
+
         canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
-        
-        # Get apps for current platform
-        current_apps = self.apps.get('windows' if self.system == 'Windows' else 'linux', {})
-        
-        # Create checkboxes
-        for app_name in current_apps.keys():
+
+        # Cross-platform apps
+        ttk.Label(scrollable_frame, text="Cross-Platform", font=("Arial", 9, "bold")).pack(anchor=tk.W, pady=(0, 2))
+        for app_name in self.apps['cross_platform'].keys():
             var = tk.BooleanVar()
-            cb = ttk.Checkbutton(scrollable_frame, text=app_name, variable=var)
-            cb.pack(anchor=tk.W, pady=2)
+            ttk.Checkbutton(scrollable_frame, text=app_name, variable=var).pack(anchor=tk.W, pady=2)
             self.checkboxes[app_name] = var
-        
+
+        # Windows-only apps
+        if self.system == "Windows":
+            ttk.Label(scrollable_frame, text="\nWindows Only", font=("Arial", 9, "bold")).pack(anchor=tk.W, pady=(5, 2))
+            for app_name in self.apps['windows_only'].keys():
+                var = tk.BooleanVar()
+                ttk.Checkbutton(scrollable_frame, text=app_name, variable=var).pack(anchor=tk.W, pady=2)
+                self.checkboxes[app_name] = var
+
         canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
     
@@ -391,39 +396,27 @@ class OmniSetupGUI:
                 run_command("sudo pacman -S --noconfirm xfce4")
     
     def _install_apps(self, selected_apps):
-        current_apps = self.apps.get('windows' if self.system == 'Windows' else 'linux', {})
-        
+        try:
+            distro = platform.freedesktop_os_release().get('ID', '').lower()
+        except:
+            distro = ''
+
         if self.system == "Windows":
-            for app_name in selected_apps:
-                pkg = current_apps.get(app_name)
+            all_apps = {**self.apps['cross_platform'], **self.apps['windows_only']}
+            for name in selected_apps:
+                val = all_apps.get(name)
+                pkg = val if isinstance(val, str) else val.get('winget') if val else None
                 if pkg:
-                    self.log(f"Installing {app_name}...")
+                    self.log(f"Installing {name}...")
                     run_command(f'winget install --id {pkg} --silent --accept-package-agreements --accept-source-agreements')
         else:
-            try:
-                distro = platform.freedesktop_os_release().get('ID', '').lower()
-            except:
-                distro = ''
-            
             if 'ubuntu' in distro or 'debian' in distro:
                 run_command("sudo apt update")
-                for app_name in selected_apps:
-                    pkg = current_apps.get(app_name)
-                    if pkg:
-                        self.log(f"Installing {app_name}...")
-                        run_command(f"sudo apt install -y {pkg}")
-            elif 'fedora' in distro:
-                for app_name in selected_apps:
-                    pkg = current_apps.get(app_name)
-                    if pkg:
-                        self.log(f"Installing {app_name}...")
-                        run_command(f"sudo dnf install -y {pkg}")
-            elif 'arch' in distro:
-                for app_name in selected_apps:
-                    pkg = current_apps.get(app_name)
-                    if pkg:
-                        self.log(f"Installing {app_name}...")
-                        run_command(f"sudo pacman -S --noconfirm {pkg}")
+            for name in selected_apps:
+                app_config = self.apps['cross_platform'].get(name)
+                if app_config:
+                    self.log(f"Installing {name}...")
+                    install_linux_app(name, app_config, distro)
     
     def _install_power_tool(self, tool):
         """Install power management tool"""

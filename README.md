@@ -12,7 +12,7 @@ Universal setup tool for fresh Windows and Linux installations. One command to r
 - **Install Applications** in one go
 
 ### Linux
-- **Install Desktop Environments** (KDE Plasma or XFCE)
+- **Install Desktop Environments** (KDE Plasma or XFCE) — includes display manager (SDDM/LightDM)
 - **Install Power Management Tools** - Hardware-aware optimization:
   - auto-cpufreq (Automatic CPU optimization)
   - TLP (Comprehensive power management)
@@ -43,6 +43,7 @@ Universal setup tool for fresh Windows and Linux installations. One command to r
 - Python
 - Visual Studio Code
 - Notepad++ (Windows only)
+
 ## One-Line Installation
 
 Clones the repository and automatically runs the setup script:
@@ -82,6 +83,8 @@ setup.cmd
 ## Linux Installation Notes
 
 OmniSetup works on any existing Linux system. It's most useful for automating post-install setup — installing your preferred DE, apps, and power tools in one go instead of manually running each command.
+
+> **No desktop yet?** OmniSetup runs in CLI mode automatically when no display is detected. Install your DE via Option 1, reboot, then re-run OmniSetup to get the full GUI experience.
 
 ### Git Not Installed?
 
@@ -190,7 +193,8 @@ If you have a laptop with NVIDIA GPU (Optimus/hybrid graphics), GPU switching to
 
 ## Notes
 
-- OmniSetup uses a graphical interface (GUI) for easy checkbox-based selection
+- On Windows, OmniSetup uses a graphical interface (GUI) for easy checkbox-based selection
+- On Linux, OmniSetup runs in CLI mode (no display required)
 - On Windows, some operations require running as Administrator
 - On Linux, you may need to enter your sudo password
 - The script will detect your platform and hardware automatically
@@ -200,7 +204,7 @@ If you have a laptop with NVIDIA GPU (Optimus/hybrid graphics), GPU switching to
 
 ## About
 
-This script was created for personal convenience during frequent fresh installations. Currently being refined and expanded with more features for general use. Contributions and suggestions are welcome!
+OmniSetup v1.0.0 — created for personal convenience during frequent fresh installations, now ready for general use. Contributions and suggestions are welcome!
 
 ## License
 

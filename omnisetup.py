@@ -273,6 +273,29 @@ def install_linux_de():
     
     logging.info("DE installation completed")
 
+    # Verify installation
+    de_package = "kde-plasma-desktop" if choice == "1" else "xfce4"
+    result = subprocess.run(f"dpkg -l {de_package} 2>/dev/null | grep -E '^ii'", shell=True, capture_output=True, text=True)
+    if result.stdout.strip():
+        print(f"\n✓ {de_package} installed successfully!")
+    else:
+        print(f"\n✗ {de_package} may not have installed correctly. Check omnisetup.log for details.")
+        return
+
+    print("\n1. Reboot now")
+    print("2. Back to main menu")
+    try:
+        post_choice = input("\nSelect option (1-2): ").strip()
+    except EOFError:
+        return
+
+    if post_choice == "1":
+        print("Rebooting...")
+        logging.info("User initiated reboot after DE install")
+        run_command("sudo reboot")
+    else:
+        return
+
 def install_power_management():
     print("\n=== Power Management Installation ===")
     
@@ -443,44 +466,63 @@ def get_app_list():
     """Returns the application list for both platforms"""
     return APPS
 
+def install_linux_app(name, app_config, distro):
+    """Install a single Linux app based on its method"""
+    linux = app_config.get('linux', {})
+    method = linux.get('method')
+
+    if 'ubuntu' in distro or 'debian' in distro:
+        if method == 'apt':
+            run_command(f"sudo apt install -y {linux['apt_pkg']}")
+        elif method == 'deb':
+            deb_url = linux['deb_url']
+            run_command(f"wget -O /tmp/omnisetup_{name.replace(' ', '_')}.deb '{deb_url}'")
+            run_command(f"sudo apt install -y /tmp/omnisetup_{name.replace(' ', '_')}.deb")
+        elif method == 'repo':
+            for cmd in linux.get('repo_cmds', []):
+                run_command(cmd)
+    elif 'fedora' in distro or 'rhel' in distro:
+        if method == 'apt':
+            run_command(f"sudo dnf install -y {linux['dnf_pkg']}")
+        else:
+            for cmd in linux.get('dnf_cmds', []):
+                run_command(cmd)
+    elif 'arch' in distro:
+        if method == 'apt':
+            run_command(f"sudo pacman -S --noconfirm {linux['pacman_pkg']}")
+        else:
+            for cmd in linux.get('pacman_cmds', []):
+                run_command(cmd)
+    else:
+        print(f"Unsupported distribution for {name}")
+
 def install_apps():
     print("\n=== Installing Applications ===")
     logging.info("Starting application installation")
-    
+
     apps = get_app_list()
-    
+
     if os.name == 'nt':
         print("\nUsing winget to install applications...")
-        for name, pkg in apps['windows'].items():
-            print(f"Installing {name}...")
-            run_command(f'winget install --id {pkg} --silent --accept-package-agreements --accept-source-agreements')
+        all_apps = {**apps['cross_platform'], **apps['windows_only']}
+        for name, val in all_apps.items():
+            pkg = val if isinstance(val, str) else val.get('winget')
+            if pkg:
+                print(f"Installing {name}...")
+                run_command(f'winget install --id {pkg} --silent --accept-package-agreements --accept-source-agreements')
     else:
         try:
             distro = platform.freedesktop_os_release().get('ID', '').lower()
         except:
             distro = ''
-        
+
         if 'ubuntu' in distro or 'debian' in distro:
-            print("\nUsing apt to install applications...")
             run_command("sudo apt update")
-            for name, pkg in apps['linux'].items():
-                print(f"Installing {name}...")
-                run_command(f"sudo apt install -y {pkg}")
-        elif 'fedora' in distro:
-            print("\nUsing dnf to install applications...")
-            for name, pkg in apps['linux'].items():
-                print(f"Installing {name}...")
-                run_command(f"sudo dnf install -y {pkg}")
-        elif 'arch' in distro:
-            print("\nUsing pacman to install applications...")
-            for name, pkg in apps['linux'].items():
-                print(f"Installing {name}...")
-                run_command(f"sudo pacman -S --noconfirm {pkg}")
-        else:
-            print(f"Unsupported distribution: {distro}")
-            logging.error(f"Unsupported distribution: {distro}")
-            return
-    
+
+        for name, app_config in apps['cross_platform'].items():
+            print(f"Installing {name}...")
+            install_linux_app(name, app_config, distro)
+
     logging.info("Application installation completed")
 
 def main_menu():
