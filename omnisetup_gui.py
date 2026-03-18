@@ -80,13 +80,16 @@ class OmniSetupGUI:
         ttk.Button(button_frame, text="Select All Apps", command=self.select_all_apps).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Deselect All Apps", command=self.deselect_all_apps).pack(side=tk.LEFT, padx=5)
 
-        self.dark_mode = tk.BooleanVar(value=False)
-        self.theme_btn = tk.Button(button_frame, text="☀ Light Mode", command=self.toggle_theme,
-            bg="#4a9eff", fg="white", relief=tk.FLAT, padx=8, cursor="hand2")
-        self.theme_btn.pack(side=tk.RIGHT, padx=5)
+        # Header row with title + toggle button
+        header_frame = tk.Frame(self.root)
+        header_frame.pack(fill=tk.X, padx=10, pady=10)
 
-        # Header
-        tk.Label(self.root, text=f"OmniSetup - {self.system}", font=("Arial", 16, "bold"), pady=10).pack()
+        tk.Label(header_frame, text=f"OmniSetup - {self.system}", font=("Arial", 16, "bold")).pack(side=tk.LEFT)
+
+        self.dark_mode = tk.BooleanVar(value=False)
+        self.theme_btn = tk.Button(header_frame, text="☀ Light Mode", command=self.toggle_theme,
+            bg="#4a9eff", fg="white", relief=tk.FLAT, padx=8, cursor="hand2")
+        self.theme_btn.pack(side=tk.LEFT, padx=10)
 
         # Scrollable main area
         container = ttk.Frame(self.root)
