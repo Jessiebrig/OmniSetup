@@ -71,21 +71,26 @@ echo ""
 
 # Download setup.sh from selected branch
 SCRIPT_URL="https://raw.githubusercontent.com/$REPO_OWNER/$REPO_NAME/$SELECTED_BRANCH/$SCRIPT_NAME"
+TMP_SCRIPT=$(mktemp /tmp/omnisetup_XXXXXX.sh)
 
 echo -n "Downloading setup.sh... "
-if curl -sL "$SCRIPT_URL" -o "$SCRIPT_NAME" 2>/dev/null; then
+if curl -fsSL "$SCRIPT_URL" -o "$TMP_SCRIPT" 2>/dev/null; then
     echo "✓"
 else
     echo "✗"
     echo "Error: Failed to download setup.sh"
+    rm -f "$TMP_SCRIPT"
     exit 1
 fi
 
-if [[ ! -f "$SCRIPT_NAME" ]] || [[ ! -s "$SCRIPT_NAME" ]]; then
+if [[ ! -s "$TMP_SCRIPT" ]]; then
     echo "Error: setup.sh is empty or missing"
+    rm -f "$TMP_SCRIPT"
     exit 1
 fi
 
+chmod +x "$TMP_SCRIPT"
 exec < /dev/tty
 export INSTALLER_BRANCH="$SELECTED_BRANCH"
-bash "$SCRIPT_NAME"
+bash "$TMP_SCRIPT"
+rm -f "$TMP_SCRIPT"
