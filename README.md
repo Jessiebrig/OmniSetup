@@ -56,7 +56,7 @@ curl -fsSL https://raw.githubusercontent.com/Jessiebrig/OmniSetup/refs/heads/mai
 ### Linux (Terminal as Root/Sudo)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Jessiebrig/OmniSetup/refs/heads/main/init.sh -o /tmp/omnisetup_init.sh && bash /tmp/omnisetup_init.sh < /dev/tty
+curl -fsSL https://raw.githubusercontent.com/Jessiebrig/OmniSetup/refs/heads/main/init.sh | bash
 ```
 
 ## Quick Start
