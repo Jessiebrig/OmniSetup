@@ -56,7 +56,7 @@ curl -fsSL https://raw.githubusercontent.com/Jessiebrig/OmniSetup/refs/heads/mai
 ### Linux (Terminal as Root/Sudo)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Jessiebrig/OmniSetup/refs/heads/main/init.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Jessiebrig/OmniSetup/refs/heads/main/init.sh -o /tmp/omnisetup_init.sh && bash /tmp/omnisetup_init.sh
 ```
 
 ## Quick Start
@@ -81,11 +81,7 @@ setup.cmd
 
 ## Linux Installation Notes
 
-For the cleanest installation experience, it's recommended to install on a fresh Linux system **without a desktop environment** (server/minimal install). This ensures:
-- No conflicting desktop environments
-- Clean package dependencies
-- Optimal performance
-- No pre-installed bloatware
+OmniSetup works on any existing Linux system. It's most useful for automating post-install setup — installing your preferred DE, apps, and power tools in one go instead of manually running each command.
 
 ### Git Not Installed?
 

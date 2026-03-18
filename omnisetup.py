@@ -545,8 +545,9 @@ if __name__ == "__main__":
     if os.name == 'nt' and not check_python_windows():
         install_python_windows()
     
-    # Check for updates/branch selection
-    check_for_updates()
+    # Check for updates/branch selection (only if running from a git repo)
+    if os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.git')):
+        check_for_updates()
     
     if not is_admin():
         print("\nWarning: Running without administrator/root privileges.")
