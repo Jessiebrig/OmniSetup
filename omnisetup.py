@@ -4,10 +4,8 @@ import sys
 import platform
 import subprocess
 import logging
-from datetime import datetime
 from apps_config import APPS
 
-# Setup logging
 log_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'omnisetup.log')
 logging.basicConfig(
     level=logging.INFO,
@@ -19,57 +17,29 @@ logging.basicConfig(
 )
 
 def detect_cpu_vendor():
-    """
-    Detect CPU vendor (Intel or AMD)
-    Returns: 'intel', 'amd', or 'unknown'
-    """
     if platform.system() != "Linux":
         return 'unknown'
-    
     try:
-        result = subprocess.run(
-            ['cat', '/proc/cpuinfo'],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        
+        result = subprocess.run(['cat', '/proc/cpuinfo'], capture_output=True, text=True, check=True)
         output = result.stdout.lower()
-        
         if 'genuineintel' in output or 'intel' in output:
             return 'intel'
         elif 'authenticamd' in output or 'amd' in output:
             return 'amd'
-        else:
-            return 'unknown'
+        return 'unknown'
     except:
         return 'unknown'
 
 def detect_nvidia_gpu():
-    """
-    Detect if NVIDIA GPU is present
-    Returns: True if NVIDIA detected, False otherwise
-    """
     if platform.system() != "Linux":
         return False
-    
     try:
-        result = subprocess.run(
-            ['lspci'],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        
+        result = subprocess.run(['lspci'], capture_output=True, text=True, check=True)
         return 'nvidia' in result.stdout.lower()
     except:
         return False
 
 def get_hardware_info():
-    """
-    Get complete hardware information
-    Returns: dict with cpu_vendor and has_nvidia
-    """
     return {
         'cpu_vendor': detect_cpu_vendor(),
         'has_nvidia': detect_nvidia_gpu()
@@ -85,14 +55,12 @@ def is_admin():
             return ctypes.windll.shell32.IsUserAnAdmin() != 0
         except:
             return False
-    else:
-        # On Linux, we use sudo for individual commands, so return True
-        return True
+    return True
 
 def run_command(cmd, shell=True):
     try:
         logging.info(f"Running: {cmd}")
-        result = subprocess.run(cmd, shell=shell, check=True, text=True)
+        subprocess.run(cmd, shell=shell, check=True, text=True)
         return True
     except subprocess.CalledProcessError as e:
         logging.error(f"Command failed: {e}")
@@ -110,17 +78,15 @@ def install_python_windows():
     logging.info("Installing Python via winget")
     if run_command('winget install --id Python.Python.3.12 --silent --accept-package-agreements --accept-source-agreements'):
         print("Python installed successfully. Please restart this script.")
-        logging.info("Python installation completed")
         sys.exit(0)
     else:
         print("Failed to install Python. Please install manually from https://www.python.org/")
-        logging.error("Python installation failed")
         sys.exit(1)
 
 def get_current_branch():
     try:
-        result = subprocess.run(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], 
-                              capture_output=True, text=True, check=True)
+        result = subprocess.run(['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
+                                capture_output=True, text=True, check=True)
         return result.stdout.strip()
     except:
         return None
@@ -128,21 +94,18 @@ def get_current_branch():
 def get_available_branches():
     try:
         subprocess.run(['git', 'fetch', '--all'], capture_output=True, check=True)
-        result = subprocess.run(['git', 'branch', '-r'], 
-                              capture_output=True, text=True, check=True)
+        result = subprocess.run(['git', 'branch', '-r'], capture_output=True, text=True, check=True)
         branches = []
         for line in result.stdout.split('\n'):
             line = line.strip()
             if line and 'origin/' in line and '->' not in line:
-                branch = line.replace('origin/', '')
-                branches.append(branch)
+                branches.append(line.replace('origin/', ''))
         return branches
     except:
         return ['main']
 
 def switch_branch(branch):
     try:
-        logging.info(f"Switching to branch: {branch}")
         subprocess.run(['git', 'checkout', branch], check=True, capture_output=True)
         subprocess.run(['git', 'pull'], check=True, capture_output=True)
         return True
@@ -152,171 +115,66 @@ def switch_branch(branch):
 def check_for_updates():
     current = get_current_branch()
     if not current:
-        logging.warning("Not a git repository, skipping branch check")
         return
-    
     print(f"\nCurrent branch: {current}")
     branches = get_available_branches()
-    
     if len(branches) > 1:
         print("\nAvailable branches:")
         for i, branch in enumerate(branches, 1):
             marker = " (current)" if branch == current else ""
             print(f"{i}. {branch}{marker}")
-        
         choice = input("\nSwitch branch? (Enter number or press Enter to continue): ").strip()
         if choice.isdigit() and 1 <= int(choice) <= len(branches):
             new_branch = branches[int(choice) - 1]
             if new_branch != current:
                 if switch_branch(new_branch):
                     print(f"Switched to {new_branch}. Restarting...")
-                    logging.info(f"Switched to branch: {new_branch}")
                     os.execv(sys.executable, [sys.executable] + sys.argv)
                 else:
                     print("Failed to switch branch")
-                    logging.error("Branch switch failed")
 
 def install_windows_debloat():
     print("\n=== Windows Debloat ===")
     print("1. Chris Titus Tech Debloat")
     print("2. Windows10Debloater")
     choice = input("\nChoose option (1-2): ").strip()
-    
     if choice == "1":
         print("\nRunning Chris Titus Tech Windows Utility...")
-        print("The GUI will open. Close it when done to continue.")
-        logging.info("Starting Chris Titus Tech debloat")
-        cmd = 'powershell -ExecutionPolicy Bypass -Command "irm christitus.com/win | iex"'
-        subprocess.run(cmd, shell=True)
-        print("Chris Titus Tech completed.")
+        subprocess.run('powershell -ExecutionPolicy Bypass -Command "irm christitus.com/win | iex"', shell=True)
     elif choice == "2":
         print("\nRunning Windows10Debloater...")
-        print("The GUI will open. Close it when done to continue.")
-        logging.info("Starting Windows10Debloater")
-        cmd = 'powershell -ExecutionPolicy Bypass -Command "iwr -useb https://git.io/debloat|iex"'
-        subprocess.run(cmd, shell=True)
-        print("Windows10Debloater completed.")
+        subprocess.run('powershell -ExecutionPolicy Bypass -Command "iwr -useb https://git.io/debloat|iex"', shell=True)
     else:
         print("Invalid option")
-        logging.warning(f"Invalid debloat option: {choice}")
 
 def install_windows_runtimes():
     print("\n=== Installing Visual C++ & .NET Framework ===")
     logging.info("Starting Windows runtimes installation")
-    
     print("Installing Visual C++ Redistributables...")
-    vcredist_urls = [
-        "https://aka.ms/vs/17/release/vc_redist.x64.exe",
-        "https://aka.ms/vs/17/release/vc_redist.x86.exe"
-    ]
-    for url in vcredist_urls:
+    for url in ["https://aka.ms/vs/17/release/vc_redist.x64.exe", "https://aka.ms/vs/17/release/vc_redist.x86.exe"]:
         run_command(f'powershell -Command "Invoke-WebRequest -Uri {url} -OutFile vcredist.exe; Start-Process vcredist.exe -ArgumentList \'/install\',\'/quiet\',\'/norestart\' -Wait; Remove-Item vcredist.exe"')
-    
     print("Installing .NET Framework...")
     run_command('winget install Microsoft.DotNet.Framework.DeveloperPack_4 --silent --accept-package-agreements --accept-source-agreements')
-    
     logging.info("Windows runtimes installation completed")
-
-def install_linux_de():
-    print("\n=== Desktop Environment Installation ===")
-    print("1. KDE Plasma")
-    print("2. XFCE")
-    choice = input("\nChoose DE (1-2): ").strip()
-    
-    try:
-        distro = platform.freedesktop_os_release().get('ID', '').lower()
-    except:
-        distro = ''
-    
-    logging.info(f"Installing DE on {distro}")
-    
-    if 'ubuntu' in distro or 'debian' in distro:
-        if choice == "1":
-            print("\nInstalling KDE Plasma...")
-            run_command("sudo apt update && sudo apt install -y kde-plasma-desktop sddm")
-            run_command("sudo systemctl enable sddm")
-        elif choice == "2":
-            print("\nInstalling XFCE...")
-            run_command("sudo apt update && sudo apt install -y xfce4 xfce4-goodies lightdm")
-            run_command("sudo systemctl enable lightdm")
-        else:
-            print("Invalid option")
-            return
-    elif 'fedora' in distro or 'rhel' in distro:
-        if choice == "1":
-            print("\nInstalling KDE Plasma...")
-            run_command("sudo dnf install -y @kde-desktop-environment sddm")
-            run_command("sudo systemctl enable sddm")
-        elif choice == "2":
-            print("\nInstalling XFCE...")
-            run_command("sudo dnf install -y @xfce-desktop-environment lightdm")
-            run_command("sudo systemctl enable lightdm")
-        else:
-            print("Invalid option")
-            return
-    elif 'arch' in distro:
-        if choice == "1":
-            print("\nInstalling KDE Plasma...")
-            run_command("sudo pacman -S --noconfirm plasma-meta sddm")
-            run_command("sudo systemctl enable sddm")
-        elif choice == "2":
-            print("\nInstalling XFCE...")
-            run_command("sudo pacman -S --noconfirm xfce4 xfce4-goodies lightdm lightdm-gtk-greeter")
-            run_command("sudo systemctl enable lightdm")
-        else:
-            print("Invalid option")
-            return
-    else:
-        print(f"Unsupported distribution: {distro}")
-        logging.error(f"Unsupported distribution: {distro}")
-        return
-    
-    logging.info("DE installation completed")
-
-    # Verify installation
-    de_package = "kde-plasma-desktop" if choice == "1" else "xfce4"
-    result = subprocess.run(f"dpkg -l {de_package} 2>/dev/null | grep -E '^ii'", shell=True, capture_output=True, text=True)
-    if result.stdout.strip():
-        print(f"\n✓ {de_package} installed successfully!")
-    else:
-        print(f"\n✗ {de_package} may not have installed correctly. Check omnisetup.log for details.")
-        return
-
-    print("\n1. Reboot now")
-    print("2. Back to main menu")
-    try:
-        post_choice = input("\nSelect option (1-2): ").strip()
-    except EOFError:
-        return
-
-    if post_choice == "1":
-        print("Rebooting...")
-        logging.info("User initiated reboot after DE install")
-        run_command("sudo reboot")
-    else:
-        return
 
 def install_power_management():
     print("\n=== Power Management Installation ===")
-    
-    # Detect hardware
     hw_info = get_hardware_info()
     cpu_vendor = hw_info['cpu_vendor']
     has_nvidia = hw_info['has_nvidia']
-    
+
     print(f"\nDetected: {cpu_vendor.upper()} CPU" + (" + NVIDIA GPU" if has_nvidia else ""))
     print("\n--- Basic Options ---")
     print("1. auto-cpufreq (Automatic, recommended)")
     print("2. TLP (Advanced features)")
-    
+
     option_num = 3
     cpu_tool_option = None
     nvidia_tool1_option = None
     nvidia_tool2_option = None
     combo1_option = None
     combo2_option = None
-    
-    # CPU-specific tool
+
     print("\n--- CPU-Specific Tools ---")
     if cpu_vendor == 'intel':
         print(f"{option_num}. thermald (Intel thermal management)")
@@ -330,8 +188,7 @@ def install_power_management():
         cpu_tool_name = "ryzenadj"
         cpu_tool_pkg = "ryzenadj"
         option_num += 1
-    
-    # NVIDIA tools
+
     if has_nvidia:
         print("\n--- NVIDIA GPU Tools ---")
         print(f"{option_num}. envycontrol (NVIDIA GPU switching)")
@@ -340,8 +197,7 @@ def install_power_management():
         print(f"{option_num}. optimus-manager (Advanced NVIDIA switching)")
         nvidia_tool2_option = option_num
         option_num += 1
-    
-    # Combo options
+
     if cpu_tool_option or has_nvidia:
         print("\n--- Recommended Combinations ---")
         combo_parts = []
@@ -349,53 +205,43 @@ def install_power_management():
             combo_parts.append(cpu_tool_name)
         if has_nvidia:
             combo_parts.append("envycontrol")
-        
         if combo_parts:
             print(f"{option_num}. auto-cpufreq + {' + '.join(combo_parts)}")
             combo1_option = option_num
             option_num += 1
-            
             combo_parts_adv = []
             if cpu_tool_option:
                 combo_parts_adv.append(cpu_tool_name)
             if has_nvidia:
                 combo_parts_adv.append("optimus-manager")
-            
             print(f"{option_num}. TLP + {' + '.join(combo_parts_adv)}")
             combo2_option = option_num
             option_num += 1
-    
+
     choice = input("\nSelect option: ").strip()
-    
+
     try:
         distro = platform.freedesktop_os_release().get('ID', '').lower()
     except:
         distro = ''
-    
+
     if choice == "1":
-        print("\nInstalling auto-cpufreq...")
         _install_power_tool("auto-cpufreq", distro)
     elif choice == "2":
-        print("\nInstalling TLP...")
         _install_power_tool("tlp", distro)
     elif cpu_tool_option and choice == str(cpu_tool_option):
-        print(f"\nInstalling {cpu_tool_name}...")
         _install_power_tool(cpu_tool_pkg, distro)
     elif nvidia_tool1_option and choice == str(nvidia_tool1_option):
-        print("\nInstalling envycontrol...")
         _install_power_tool("envycontrol", distro)
     elif nvidia_tool2_option and choice == str(nvidia_tool2_option):
-        print("\nInstalling optimus-manager...")
         _install_power_tool("optimus-manager", distro)
     elif combo1_option and choice == str(combo1_option):
-        print("\nInstalling recommended combo...")
         _install_power_tool("auto-cpufreq", distro)
         if cpu_tool_option:
             _install_power_tool(cpu_tool_pkg, distro)
         if has_nvidia:
             _install_power_tool("envycontrol", distro)
     elif combo2_option and choice == str(combo2_option):
-        print("\nInstalling advanced combo...")
         _install_power_tool("tlp", distro)
         if cpu_tool_option:
             _install_power_tool(cpu_tool_pkg, distro)
@@ -403,12 +249,10 @@ def install_power_management():
             _install_power_tool("optimus-manager", distro)
     else:
         print("Invalid option")
-        return
-    
+
     logging.info("Power management installation completed")
 
 def _install_power_tool(tool, distro):
-    """Helper function to install power management tools"""
     if 'ubuntu' in distro or 'debian' in distro:
         if tool == "auto-cpufreq":
             run_command("sudo apt update && sudo apt install -y auto-cpufreq")
@@ -427,7 +271,6 @@ def _install_power_tool(tool, distro):
             run_command("pip3 install envycontrol")
         elif tool == "optimus-manager":
             print("Note: optimus-manager is primarily for Arch-based distros")
-            print("Consider using envycontrol instead")
     elif 'fedora' in distro or 'rhel' in distro:
         if tool == "auto-cpufreq":
             run_command("sudo dnf install -y auto-cpufreq")
@@ -463,11 +306,9 @@ def _install_power_tool(tool, distro):
             run_command("sudo systemctl enable optimus-manager")
 
 def get_app_list():
-    """Returns the application list for both platforms"""
     return APPS
 
 def install_linux_app(name, app_config, distro):
-    """Install a single Linux app based on its method"""
     linux = app_config.get('linux', {})
     method = linux.get('method')
 
@@ -475,8 +316,7 @@ def install_linux_app(name, app_config, distro):
         if method == 'apt':
             run_command(f"sudo apt install -y {linux['apt_pkg']}")
         elif method == 'deb':
-            deb_url = linux['deb_url']
-            run_command(f"wget -O /tmp/omnisetup_{name.replace(' ', '_')}.deb '{deb_url}'")
+            run_command(f"wget -O /tmp/omnisetup_{name.replace(' ', '_')}.deb '{linux['deb_url']}'")
             run_command(f"sudo apt install -y /tmp/omnisetup_{name.replace(' ', '_')}.deb")
         elif method == 'repo':
             for cmd in linux.get('repo_cmds', []):
@@ -499,11 +339,9 @@ def install_linux_app(name, app_config, distro):
 def install_apps():
     print("\n=== Installing Applications ===")
     logging.info("Starting application installation")
-
     apps = get_app_list()
 
     if os.name == 'nt':
-        print("\nUsing winget to install applications...")
         all_apps = {**apps['cross_platform'], **apps['windows_only']}
         for name, val in all_apps.items():
             pkg = val if isinstance(val, str) else val.get('winget')
@@ -515,10 +353,8 @@ def install_apps():
             distro = platform.freedesktop_os_release().get('ID', '').lower()
         except:
             distro = ''
-
         if 'ubuntu' in distro or 'debian' in distro:
             run_command("sudo apt update")
-
         for name, app_config in apps['cross_platform'].items():
             print(f"Installing {name}...")
             install_linux_app(name, app_config, distro)
@@ -533,18 +369,16 @@ def main_menu():
     print("=" * 50)
     print(f"Platform: {system} ({platform.release()})")
     print("=" * 50)
-    
+
     if system == "Windows":
         print("\n1. Debloat Windows")
         print("2. Install Visual C++ & .NET Framework")
         print("3. Install Applications")
         print("4. Quit")
-        
         try:
             choice = input("\nSelect option (1-4): ").strip()
         except EOFError:
             sys.exit(0)
-        
         if choice == "1":
             install_windows_debloat()
         elif choice == "2":
@@ -552,36 +386,27 @@ def main_menu():
         elif choice == "3":
             install_apps()
         elif choice == "4":
-            logging.info("User quit")
             sys.exit(0)
         else:
             print("Invalid option")
-            logging.warning(f"Invalid menu option: {choice}")
-    
+
     elif system == "Linux":
-        print("\n1. Install Desktop Environment (KDE/XFCE)")
-        print("2. Install Power Management")
-        print("3. Install Applications")
-        print("4. Quit")
-        
+        print("\n1. Install Power Management")
+        print("2. Install Applications")
+        print("3. Quit")
         try:
-            choice = input("\nSelect option (1-4): ").strip()
+            choice = input("\nSelect option (1-3): ").strip()
         except EOFError:
             sys.exit(0)
-        
         if choice == "1":
-            install_linux_de()
-        elif choice == "2":
             install_power_management()
-        elif choice == "3":
+        elif choice == "2":
             install_apps()
-        elif choice == "4":
-            logging.info("User quit")
+        elif choice == "3":
             sys.exit(0)
         else:
             print("Invalid option")
-            logging.warning(f"Invalid menu option: {choice}")
-    
+
     try:
         input("\nPress Enter to continue...")
     except EOFError:
@@ -593,26 +418,22 @@ if __name__ == "__main__":
     logging.info("OmniSetup started")
     logging.info(f"Platform: {platform.system()} {platform.release()}")
     logging.info("=" * 50)
-    
-    # Check for Python on Windows
+
     if os.name == 'nt' and not check_python_windows():
         install_python_windows()
-    
-    # Check for updates/branch selection (only if running from a git repo)
+
     if os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.git')):
         check_for_updates()
-    
+
     if not is_admin():
         print("\nWarning: Running without administrator/root privileges.")
         print("Some operations may fail.")
-        logging.warning("Running without admin privileges")
         input("Press Enter to continue anyway...")
-    
+
     try:
         main_menu()
     except KeyboardInterrupt:
         print("\n\nExiting...")
-        logging.info("User interrupted (Ctrl+C)")
         sys.exit(0)
     except Exception as e:
         logging.error(f"Unexpected error: {e}")

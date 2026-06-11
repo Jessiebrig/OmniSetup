@@ -2,27 +2,15 @@
 
 BASE_URL="https://raw.githubusercontent.com/Jessiebrig/OmniSetup/refs/heads/main"
 
-# Always check and download missing files
 echo "Checking for required files..."
 
 DOWNLOAD_NEEDED=0
-
-if [ ! -f "omnisetup.py" ]; then
-    DOWNLOAD_NEEDED=1
-fi
-
-if [ ! -f "omnisetup_gui.py" ]; then
-    DOWNLOAD_NEEDED=1
-fi
-
-if [ ! -f "apps_config.py" ]; then
-    DOWNLOAD_NEEDED=1
-fi
+for f in omnisetup.py omnisetup_gui.py apps_config.py; do
+    [ ! -f "$f" ] && DOWNLOAD_NEEDED=1
+done
 
 if [ $DOWNLOAD_NEEDED -eq 1 ]; then
     echo "Downloading OmniSetup files..."
-    
-    # Try curl first, fallback to wget
     if command -v curl &> /dev/null; then
         curl -fsSL "$BASE_URL/omnisetup.py" -o omnisetup.py || { echo "Failed to download omnisetup.py"; exit 1; }
         curl -fsSL "$BASE_URL/omnisetup_gui.py" -o omnisetup_gui.py || { echo "Failed to download omnisetup_gui.py"; exit 1; }
@@ -35,25 +23,18 @@ if [ $DOWNLOAD_NEEDED -eq 1 ]; then
         echo "Neither curl nor wget found. Please install one of them."
         exit 1
     fi
-    
     echo "Download complete!"
 else
     echo "All files present."
 fi
 
-# Verify files exist
-if [ ! -f "omnisetup.py" ]; then
-    echo "Error: omnisetup.py not found after download!"
-    exit 1
-fi
-
-# Check if Python 3 is installed
+# Check Python 3
 if ! command -v python3 &> /dev/null; then
     echo "Python 3 is not installed. Installing..."
-    if command -v apt &> /dev/null; then
-        sudo apt update && sudo apt install -y python3
-    elif command -v dnf &> /dev/null; then
+    if command -v dnf &> /dev/null; then
         sudo dnf install -y python3
+    elif command -v apt &> /dev/null; then
+        sudo apt update && sudo apt install -y python3
     elif command -v pacman &> /dev/null; then
         sudo pacman -S --noconfirm python3
     else
@@ -62,23 +43,17 @@ if ! command -v python3 &> /dev/null; then
     fi
 fi
 
-# Check if display is available (GUI possible)
-if [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
-    # Display available, try GUI
-    if ! python3 -c "import tkinter" &> /dev/null; then
-        echo "Python tkinter is not installed. Installing..."
-        if command -v apt &> /dev/null; then
-            sudo apt install -y python3-tk
-        elif command -v dnf &> /dev/null; then
-            sudo dnf install -y python3-tkinter
-        elif command -v pacman &> /dev/null; then
-            sudo pacman -S --noconfirm tk
-        fi
+# Check tkinter
+if ! python3 -c "import tkinter" &> /dev/null; then
+    echo "Installing python3-tkinter..."
+    if command -v dnf &> /dev/null; then
+        sudo dnf install -y python3-tkinter
+    elif command -v apt &> /dev/null; then
+        sudo apt install -y python3-tk
+    elif command -v pacman &> /dev/null; then
+        sudo pacman -S --noconfirm tk
     fi
-    echo "Starting GUI..."
-    python3 omnisetup_gui.py
-else
-    # No display, use CLI
-    echo "No display detected. Using CLI mode..."
-    python3 omnisetup.py < /dev/tty
 fi
+
+echo "Starting OmniSetup..."
+python3 omnisetup_gui.py

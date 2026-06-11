@@ -12,7 +12,6 @@ Universal setup tool for fresh Windows and Linux installations. One command to r
 - **Install Applications** in one go
 
 ### Linux
-- **Install Desktop Environments** (KDE Plasma or XFCE) — includes display manager (SDDM/LightDM)
 - **Install Power Management Tools** - Hardware-aware optimization:
   - auto-cpufreq (Automatic CPU optimization)
   - TLP (Comprehensive power management)
@@ -43,6 +42,10 @@ Universal setup tool for fresh Windows and Linux installations. One command to r
 - Python
 - Visual Studio Code
 - Notepad++ (Windows only)
+
+**Utilities:**
+- 7-Zip (Windows only)
+- WinRAR (Windows only)
 
 ## One-Line Installation
 
@@ -80,76 +83,11 @@ setup.cmd
 - **Python 3.8+** (latest version auto-installed on Windows if missing, usually pre-installed on Linux)
 - **Administrator/Root privileges** for system modifications
 
-## Linux Installation Notes
+## Linux Notes
 
-OmniSetup works on any existing Linux system. It's most useful for automating post-install setup — installing your preferred DE, apps, and power tools in one go instead of manually running each command.
+OmniSetup targets full Linux distributions with an existing desktop environment — for example Fedora KDE, Ubuntu, Arch, etc. It is designed for post-install automation: get your preferred apps and power tools set up in one go instead of running each command manually.
 
-> **No desktop yet?** OmniSetup runs in CLI mode automatically when no display is detected. Install your DE via Option 1, reboot, then re-run OmniSetup to get the full GUI experience.
-
-### Git Not Installed?
-
-On minimal Debian installations, Git is not included by default. After enabling networking, install Git first:
-
-```bash
-sudo apt update
-sudo apt install git -y
-```
-
-### Network Not Working on Fresh Debian CLI Install?
-
-On minimal Debian installations, networking may not start automatically. Before running OmniSetup, you need to enable your network connection:
-
-**For Wired/Ethernet Connection:**
-
-1. Find your network interface name:
-```bash
-ip a
-```
-Look for interface like `enp1s0`, `eth0`, `ens33` (not `lo`)
-
-2. Configure it to persist after reboot by editing `/etc/network/interfaces`:
-```bash
-sudo nano /etc/network/interfaces
-```
-Add these lines (replace `enp1s0` with your actual interface name):
-```
-auto enp1s0
-iface enp1s0 inet dhcp
-```
-
-3. Bring the interface up:
-```bash
-sudo ifup enp1s0
-```
-
-4. Test connection:
-```bash
-ping -c 3 google.com
-```
-
-**For WiFi Connection:**
-
-1. Find your WiFi interface:
-```bash
-ip a
-```
-Look for interface like `wlan0`, `wlp2s0`
-
-2. Connect to your network:
-```bash
-sudo ip link set wlan0 up
-wpa_passphrase "YourNetworkName" "YourPassword" | sudo tee /etc/wpa_supplicant.conf
-sudo wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant.conf
-sudo dhcpcd wlan0
-```
-(Replace `wlan0` with your actual interface name)
-
-3. Test connection:
-```bash
-ping -c 3 google.com
-```
-
-Once networking is active, you can clone and run OmniSetup!
+> A display environment is required. OmniSetup runs as a GUI application on both Windows and Linux.
 
 ## Power Management Explained
 
@@ -180,11 +118,6 @@ If you have a laptop with NVIDIA GPU (Optimus/hybrid graphics), GPU switching to
 - **optimus-manager**: Advanced switching with more control (Arch-based distros)
   - Similar to envycontrol but with additional configuration options
 
-**What gets installed:**
-- The tool itself (Python package or system package)
-- Systemd services (for auto-cpufreq, TLP, thermald, optimus-manager)
-- Configuration files in appropriate locations
-
 **After installation:**
 - Most tools start automatically on boot
 - GPU switching requires logout/reboot to take effect
@@ -194,7 +127,7 @@ If you have a laptop with NVIDIA GPU (Optimus/hybrid graphics), GPU switching to
 ## Notes
 
 - On Windows, OmniSetup uses a graphical interface (GUI) for easy checkbox-based selection
-- On Linux, OmniSetup runs in CLI mode (no display required)
+- On Linux, OmniSetup runs as a GUI application — a desktop environment is required
 - On Windows, some operations require running as Administrator
 - On Linux, you may need to enter your sudo password
 - The script will detect your platform and hardware automatically
@@ -204,7 +137,7 @@ If you have a laptop with NVIDIA GPU (Optimus/hybrid graphics), GPU switching to
 
 ## About
 
-OmniSetup v1.0.0 — created for personal convenience during frequent fresh installations, now ready for general use. Contributions and suggestions are welcome!
+OmniSetup v2.0.0 — created for personal convenience during frequent fresh installations, now ready for general use. Contributions and suggestions are welcome!
 
 ## License
 

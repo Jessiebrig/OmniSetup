@@ -129,7 +129,9 @@ APPS = {
     'windows_only': {
         'Lightshot': 'Skillbrains.Lightshot',
         'Google Drive': 'Google.GoogleDrive',
-        'Notepad++': 'Notepad++.Notepad++'
+        'Notepad++': 'Notepad++.Notepad++',
+        '7-Zip': '7zip.7zip',
+        'WinRAR': 'RARLab.WinRAR'
     }
 }
 
@@ -138,5 +140,6 @@ CATEGORIES = {
     'Browsers': ['Brave Browser', 'Google Chrome', 'Mozilla Firefox'],
     'Communication': ['Slack', 'Telegram', 'Zoom'],
     'Media & Utilities': ['VLC Media Player', 'Lightshot', 'Google Drive'],
-    'Development': ['Python', 'Visual Studio Code', 'Notepad++']
+    'Development': ['Python', 'Visual Studio Code', 'Notepad++'],
+    'Utilities': ['7-Zip', 'WinRAR']
 }
